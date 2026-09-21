@@ -3,62 +3,94 @@
 **Real** browser-based terminal powered by:
 
 - **WebContainers** (StackBlitz) → real Node.js + npm + jsh shell
-- **Pyodide** → real CPython 3.x via WebAssembly
-- **xterm.js** → professional terminal UI (same as VS Code)
+- **Pyodide** → real CPython via WebAssembly
+- **xterm.js** → professional terminal UI
 
-## Features
+## Localhost + curl + endpoints / tokens
 
-- Real `npm install`, `node`, `npx`, Vite, etc. inside the browser
-- Real Python interpreter + `micropip` for pure-Python packages
-- Local storage friendly (history can be added)
-- MediaDevices permission ready (extend for camera/mic commands)
-- COOP/COEP headers configured for SharedArrayBuffer (required by WebContainers)
+WebContainers networking is **not** classic OS `127.0.0.1` from outside the tab, but inside the container you get real local servers.
 
-## Important Limitations (honest)
+### 1. Start sample local server
 
-- This is **not** full Termux. No `pkg install`, no Android system packages, no real host filesystem access.
-- Everything runs inside the browser sandbox (Wasm + virtual FS).
-- WebContainers commercial production use may require a StackBlitz license (free for open-source / personal).
-- Python networking / native extensions are limited compared to real CPython.
+```bash
+npm run server
+```
 
-## Local Development
+When ready, the terminal prints:
+
+```text
+[localhost] Server ready on port 3000
+Preview URL: https://....webcontainer-api.io/
+```
+
+You can open that Preview URL in a new tab **or** curl from inside the terminal:
+
+```bash
+node tools/curl.js --json http://localhost:3000/
+node tools/curl.js --json http://localhost:3000/api/endpoints
+node tools/curl.js --json http://localhost:3000/api/public-key
+node tools/curl.js --json http://localhost:3000/api/token
+```
+
+### 2. Curl (real fetch-based CLI)
+
+```bash
+node tools/curl.js [options] <url>
+
+# Options
+-X METHOD          # GET, POST, ...
+-H "Key: Value"    # headers
+-d BODY            # body
+-i                 # include response headers
+--json             # pretty JSON + auto extract endpoints / public keys / tokens
+```
+
+Example with token + endpoints:
+
+```bash
+node tools/curl.js --json http://localhost:3000/api/endpoints
+node tools/curl.js --json http://localhost:3000/api/public-key
+```
+
+### 3. Endpoints + public key / token inspector
+
+```bash
+node tools/endpoints.js
+node tools/endpoints.js http://localhost:3000/api/endpoints
+```
+
+This prints:
+
+- All listed API endpoints
+- Public keys
+- Access tokens / JWT-style tokens found in JSON responses
+
+### Sample API routes (from `server.js`)
+
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/` | Root info + endpoint list |
+| GET | `/api/health` | Health check |
+| GET | `/api/endpoints` | Full endpoint catalog |
+| GET | `/api/public-key` | Demo public key |
+| GET | `/api/token` | Demo Bearer / JWT-style token |
+| POST | `/api/echo` | Echo body + headers |
+
+## Limitations (honest)
+
+- Not full Termux / not real host OS localhost for every program outside the container.
+- Native `curl` binary is not present; we ship a **real** Node `fetch`-based `tools/curl.js` that works the same for HTTP(S).
+- WebContainers commercial production may need a StackBlitz license.
+
+## Local development
 
 ```bash
 npm install
 npm run dev
 ```
 
-Open http://localhost:5173 (headers are set automatically).
+Open http://localhost:5173 (COOP/COEP headers are set).
 
-## Deploy on Vercel
+## Deploy
 
-1. Push this repo to GitHub
-2. Import in Vercel
-3. The `vercel.json` already sets the required COOP/COEP headers
-
-## Commands you can try (Node mode)
-
-```
-ls
-node index.js
-npm install lodash
-npx --yes cowsay "Hello Web-Termux"
-```
-
-## Python mode
-
-```python
-print("Hello from real Pyodide")
-import sys
-sys.version
-```
-
-## Next steps you can add
-
-- Supabase auth + save terminal sessions
-- File System Access API for local folder mounting
-- Media permission commands (`camera`, `mic`)
-- Multi-tab terminals
-- Package persistence across reloads
-
-Built for real execution, not simulation.
+Repo is already linked to Vercel project `web-termux`. Push to `main` auto-deploys. `vercel.json` sets required COOP/COEP headers.
