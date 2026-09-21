@@ -1,0 +1,63 @@
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 10px 16px;
+  background: #161b22;
+  border-bottom: 1px solid #30363d;
+  flex-shrink: 0;
+}
+
+.logo {
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+
+.prompt {
+  color: #3fb950;
+  margin-right: 6px;
+}
+
+.modes {
+  display: flex;
+  gap: 6px;
+}
+
+.modes button {
+  background: #21262d;
+  border: 1px solid #30363d;
+  color: #c9d1d9;
+  padding: 4px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-family: inherit;
+}
+
+.modes button.active {
+  background: #238636;
+  border-color: #2ea043;
+  color: white;
+}
+
+.modes button:hover:not(.active) {
+  background: #30363d;
+}
+
+.status {
+  margin-left: auto;
+  font-size: 0.8rem;
+  color: #8b949e;
+}
+
+.terminal-wrapper {
+  flex: 1;
+  min-height: 0;
+  position: relative;
+}
