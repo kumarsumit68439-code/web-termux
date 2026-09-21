@@ -1,96 +1,54 @@
 # Web-Termux
 
-**Real** browser-based terminal powered by:
+Real browser terminal: **WebContainers** (Node) + **Pyodide** (Python) + **xterm.js**.
 
-- **WebContainers** (StackBlitz) → real Node.js + npm + jsh shell
-- **Pyodide** → real CPython via WebAssembly
-- **xterm.js** → professional terminal UI
+## External site endpoint scanner
 
-## Localhost + curl + endpoints / tokens
+```bash
+node tools/scan.js https://httpbin.org
+node tools/scan.js https://api.github.com --deep
+node tools/scan.js https://jsonplaceholder.typicode.com --deep
+node tools/scan.js http://localhost:3000 --deep
+```
 
-WebContainers networking is **not** classic OS `127.0.0.1` from outside the tab, but inside the container you get real local servers.
+### What it does (real HTTP)
 
-### 1. Start sample local server
+1. Fetches the base URL  
+2. Probes discovery paths: OpenAPI, Swagger, `robots.txt`, `/.well-known/openid-configuration`, `/api`, `/health`, …  
+3. With `--deep`: also probes common API paths (`/api/users`, `/graphql`, `/wp-json`, …)  
+4. Parses JSON / text for path patterns  
+5. Extracts **public keys**, **API key patterns**, **JWT-like tokens**, `access_token` fields  
+
+Status codes like **401/403** still count as “endpoint exists” (auth required).
+
+### Limits (honest)
+
+- Some sites block browser / WebContainer requests (CORS, WAF) — normal  
+- Not a penetration tool: no auth bypass, no aggressive brute force  
+- Private keys should never appear in public responses; if the scanner finds something sensitive, treat it carefully  
+
+## Localhost + curl
 
 ```bash
 npm run server
-```
-
-When ready, the terminal prints:
-
-```text
-[localhost] Server ready on port 3000
-Preview URL: https://....webcontainer-api.io/
-```
-
-You can open that Preview URL in a new tab **or** curl from inside the terminal:
-
-```bash
 node tools/curl.js --json http://localhost:3000/
-node tools/curl.js --json http://localhost:3000/api/endpoints
 node tools/curl.js --json http://localhost:3000/api/public-key
-node tools/curl.js --json http://localhost:3000/api/token
-```
-
-### 2. Curl (real fetch-based CLI)
-
-```bash
-node tools/curl.js [options] <url>
-
-# Options
--X METHOD          # GET, POST, ...
--H "Key: Value"    # headers
--d BODY            # body
--i                 # include response headers
---json             # pretty JSON + auto extract endpoints / public keys / tokens
-```
-
-Example with token + endpoints:
-
-```bash
-node tools/curl.js --json http://localhost:3000/api/endpoints
-node tools/curl.js --json http://localhost:3000/api/public-key
-```
-
-### 3. Endpoints + public key / token inspector
-
-```bash
 node tools/endpoints.js
-node tools/endpoints.js http://localhost:3000/api/endpoints
 ```
 
-This prints:
+When the server starts, the terminal prints `[localhost] Preview URL`.
 
-- All listed API endpoints
-- Public keys
-- Access tokens / JWT-style tokens found in JSON responses
+## Quick reference
 
-### Sample API routes (from `server.js`)
-
-| Method | Path | Description |
-|--------|------|-------------|
-| GET | `/` | Root info + endpoint list |
-| GET | `/api/health` | Health check |
-| GET | `/api/endpoints` | Full endpoint catalog |
-| GET | `/api/public-key` | Demo public key |
-| GET | `/api/token` | Demo Bearer / JWT-style token |
-| POST | `/api/echo` | Echo body + headers |
-
-## Limitations (honest)
-
-- Not full Termux / not real host OS localhost for every program outside the container.
-- Native `curl` binary is not present; we ship a **real** Node `fetch`-based `tools/curl.js` that works the same for HTTP(S).
-- WebContainers commercial production may need a StackBlitz license.
-
-## Local development
-
-```bash
-npm install
-npm run dev
-```
-
-Open http://localhost:5173 (COOP/COEP headers are set).
+| Command | Purpose |
+|--------|---------|
+| `npm run server` | Sample Express API on port 3000 |
+| `node tools/curl.js --json <url>` | HTTP client + key/endpoint extract |
+| `node tools/endpoints.js [url]` | Inspector for one URL |
+| `node tools/scan.js <url> [--deep]` | **External site endpoint scanner** |
+| `cat HELP.txt` | In-terminal help |
 
 ## Deploy
 
-Repo is already linked to Vercel project `web-termux`. Push to `main` auto-deploys. `vercel.json` sets required COOP/COEP headers.
+GitHub: https://github.com/kumarsumit68439-code/web-termux  
+Vercel project `web-termux` auto-deploys from `main` (COOP/COEP headers in `vercel.json`).
