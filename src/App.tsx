@@ -7,10 +7,6 @@ export default function App() {
   const [mode, setMode] = useState<'node' | 'python'>('node')
 
   useEffect(() => {
-    // Request media permission early (optional, user can deny)
-    if (navigator.mediaDevices?.getUserMedia) {
-      // We only request when user explicitly asks in terminal later
-    }
     setReady(true)
   }, [])
 
@@ -24,23 +20,21 @@ export default function App() {
           <button
             className={mode === 'node' ? 'active' : ''}
             onClick={() => setMode('node')}
+            type="button"
           >
             Node / jsh
           </button>
           <button
             className={mode === 'python' ? 'active' : ''}
             onClick={() => setMode('python')}
+            type="button"
           >
             Python (Pyodide)
           </button>
         </div>
-        <div className="status">
-          Real execution • WebContainers + Pyodide
-        </div>
+        <div className="status">Real execution • WebContainers + Pyodide</div>
       </header>
-      <main className="terminal-wrapper">
-        {ready && <Terminal mode={mode} />}
-      </main>
+      <main className="terminal-wrapper">{ready && <Terminal mode={mode} />}</main>
     </div>
   )
 }
